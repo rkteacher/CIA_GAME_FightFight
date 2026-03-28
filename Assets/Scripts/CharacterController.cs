@@ -1,14 +1,20 @@
+using System.Diagnostics.Tracing;
 using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class CharacterController : MonoBehaviour
 {
+    [SerializeField] private InputActionReference inputActionsRef;
+    [SerializeField] private Animator animator;
     private Rigidbody2D rb;
-    private float moveInput;
+    private Vector2 moveInput;
 
-    public float moveSpeed;
-    public float jumpForce;
+    [SerializeField] private float moveSpeed;
+    [SerializeField] private float jumpForce;
     [SerializeField] private float jumpTime = 0.4f; // max ammount of time allowed in air
+    [SerializeField] private int attackPower;
+    [SerializeField] private int healthPoints;
     private float airTime = 0;
 
 
@@ -28,30 +34,25 @@ public class CharacterController : MonoBehaviour
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        
     }
 
     private void Update()
     {
         // Movement input
-        moveInput = Input.GetAxis("Horizontal");
+        //moveInput = Input.GetAxis("Horizontal");
+        moveDir = inputActionsRef.action.ReadValue<Vector2>();
 
-        // Ground check
-        //isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        animator.SetFloat("horizontalVelocity", Mathf.Abs(moveDir.x)); // get the absolute value of the Vector2 and apply that to the Animator perameter
 
-        // Jump
-        if (Input.GetButtonDown("Jump") && IsPlayerGrounded())
+        Debug.Log($"Is player grounded = {IsPlayerGrounded()}");
+        Debug.Log($"Move Direction = {moveDir}");
+
+        if(moveDir.y >= 0.1f)
         {
-            //rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
             Debug.Log("jump");
-
             Jump();
             isJumping = true;
-        }
-
-        // Attack
-        if (Input.GetKeyDown(KeyCode.Mouse0))
-        {
-            //Attack();
         }
     }
 
@@ -61,7 +62,7 @@ public class CharacterController : MonoBehaviour
 
         // get input
         // move character
-
+        rb.linearVelocity = new Vector2(moveDir.x * moveSpeed, rb.linearVelocity.y);
     }
 
     /// <summary>
