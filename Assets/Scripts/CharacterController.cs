@@ -48,12 +48,17 @@ public class CharacterController : MonoBehaviour
         Debug.Log($"Is player grounded = {IsPlayerGrounded()}");
         Debug.Log($"Move Direction = {moveDir}");
 
+        SetAnimations();
+
+
         if(moveDir.y >= 0.1f)
         {
             Debug.Log("jump");
             Jump();
             isJumping = true;
         }
+
+
     }
 
     private void FixedUpdate()
@@ -93,6 +98,25 @@ public class CharacterController : MonoBehaviour
         else
         {
             isJumping = false;
+        }
+    }
+
+
+    void SetAnimations()
+    {
+        if (moveDir.x > 0)
+        {
+            Debug.Log("Moving Right");
+            gameObject.transform.localScale = new Vector3(1,1,1);
+        }
+        else if (moveDir.x < 0)
+        {
+            Debug.Log("Moving Left");
+            gameObject.transform.localScale = new Vector3(-1, 1, 1);
+        }
+        else
+        {
+            Debug.Log("Idle");
         }
     }
 }
