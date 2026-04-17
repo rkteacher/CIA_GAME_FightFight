@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Diagnostics.Tracing;
 using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
@@ -5,7 +6,8 @@ using UnityEngine.InputSystem;
 
 public class CharacterController : MonoBehaviour
 {
-    [SerializeField] private InputActionReference inputActionsRef;
+    [SerializeField] private InputActionReference movementActionRef;
+    [SerializeField] private InputActionReference attackActionRef;
     [SerializeField] private Animator animator;
     private Rigidbody2D rb;
     private Vector2 moveInput;
@@ -30,18 +32,35 @@ public class CharacterController : MonoBehaviour
 
     private bool isJumping;
 
+    [Header("Attack Perameters")]
+    [SerializeField] float attackDelay = 0.5f;
+    [SerializeField] BoxCollider2D col_MediumAttack;
+
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
-        
+        col_MediumAttack.enabled = false;
+    }
+    private void OnEnable()
+    {
+        attackActionRef.action.Enable();
+        attackActionRef.action.performed += OnAttackPerformed;
+    }
+
+    private void OnDisable()
+    {
+        attackActionRef.action.performed -= OnAttackPerformed;
+        attackActionRef.action.Disable();
     }
 
     private void Update()
     {
         // Movement input
         //moveInput = Input.GetAxis("Horizontal");
-        moveDir = inputActionsRef.action.ReadValue<Vector2>();
+        moveDir = movementActionRef.action.ReadValue<Vector2>();
+        
+        Vector2 movementDirection = rb.linearVelocity.normalized;
 
         animator.SetFloat("horizontalVelocity", Mathf.Abs(moveDir.x)); // get the absolute value of the Vector2 and apply that to the Animator perameter
 
@@ -51,9 +70,12 @@ public class CharacterController : MonoBehaviour
         SetAnimations();
 
 
-        if(moveDir.y >= 0.1f)
+
+        animator.SetFloat("verticalVelocity", movementDirection.y);
+        if (moveDir.y >= 0.1f && IsPlayerGrounded())
         {
             Debug.Log("jump");
+            
             Jump();
             isJumping = true;
         }
@@ -76,10 +98,12 @@ public class CharacterController : MonoBehaviour
     /// <returns></returns>
     private bool IsPlayerGrounded()
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down, raycastDistance, groundLayer);
+        Vector2 origin = (Vector2)transform.position + Vector2.down * 0.6f;
+        RaycastHit2D hit = Physics2D.Raycast(origin, Vector2.down, raycastDistance, groundLayer);
+
 
         // For debugging: draws the ray in the scene view
-        Debug.DrawRay(transform.position, Vector2.down * raycastDistance, hit.collider != null ? Color.green : Color.red);
+        Debug.DrawRay(origin, Vector2.down * raycastDistance, hit.collider != null ? Color.green : Color.red);
 
         // If the ray hits a collider on the specified groundLayer, the player is grounded
         return hit.collider != null;
@@ -101,12 +125,32 @@ public class CharacterController : MonoBehaviour
         }
     }
 
+    
+
+    private void OnAttackPerformed(InputAction.CallbackContext context)
+    {
+        Debug.Log("Atatack Action pressed");
+        Attack();
+    }
+
+    private void Attack()
+    {
+        animator.SetTrigger("isAttacking");
+        StartCoroutine(Attack_CoRoutine());
+    }
+
+    IEnumerator Attack_CoRoutine()
+    {
+        col_MediumAttack.enabled = true;
+        yield return new WaitForSeconds(attackDelay);
+        col_MediumAttack.enabled = false;
+        yield return null;
+    }
 
     void SetAnimations()
     {
         if (moveDir.x > 0)
         {
-            Debug.Log("Moving Right");
             gameObject.transform.localScale = new Vector3(1,1,1);
         }
         else if (moveDir.x < 0)
