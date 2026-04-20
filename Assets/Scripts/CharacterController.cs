@@ -163,4 +163,24 @@ public class CharacterController : MonoBehaviour
             Debug.Log("Idle");
         }
     }
+
+
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        
+        if(collision.gameObject.tag == "Hazzard")
+        {
+            healthPoints--;
+            CheckHealth();
+        }
+    }
+
+    void CheckHealth()
+    {
+        if(healthPoints <= 0)
+        {
+            animator.SetBool("isDead", true);
+            healthPoints = 0;
+        }
+    }
 }
