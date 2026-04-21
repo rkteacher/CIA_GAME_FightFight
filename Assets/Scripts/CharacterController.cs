@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Diagnostics.Tracing;
+using Unity.VisualScripting;
 using Unity.VisualScripting.Dependencies.Sqlite;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -22,6 +23,7 @@ public class CharacterController : MonoBehaviour
 
     [SerializeField] private float raycastDistance = 0.2f;
     [SerializeField] private LayerMask groundLayer;
+    private float yDeathrange = -6f;
 
     //public bool isGrounded {  get; private set; }
 
@@ -79,8 +81,6 @@ public class CharacterController : MonoBehaviour
             Jump();
             isJumping = true;
         }
-
-
     }
 
     private void FixedUpdate()
@@ -90,6 +90,18 @@ public class CharacterController : MonoBehaviour
         // get input
         // move character
         rb.linearVelocity = new Vector2(moveDir.x * moveSpeed, rb.linearVelocity.y);
+        CheckResetRange();
+    }
+
+    /// <summary>
+    /// Checks if the game object's position the class is attached to falls below a specific range. If it does it calls upon the GameManager to reset the scene. 
+    /// </summary>
+    void CheckResetRange()
+    {
+        if(gameObject.transform.position.y <= yDeathrange)
+        {
+            GameManager.instance.ResetScene();
+        }
     }
 
     /// <summary>
